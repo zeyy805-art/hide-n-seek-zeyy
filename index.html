@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="id"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>HIDE AND SEEK by ZEYY</title>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
+html,body{margin:0;height:100%;overflow:hidden;font-family:"Trebuchet MS","Segoe UI",sans-serif;background:#101713;color:#e7e5dc;touch-action:none}
+.hide{display:none!important}
+.scr{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:16px;background:radial-gradient(ellipse at 50% 75%,rgba(68,82,61,.45),transparent 55%),linear-gradient(145deg,#101713,#20291f 55%,#090e0c);color:#eee}
+h1{margin:0;font-size:clamp(40px,12vw,76px);line-height:.95;text-align:center;color:#d8d4c7;text-shadow:0 3px 12px #000,0 0 22px #59634e;letter-spacing:1px}
+h1 small{display:block;font-size:.4em;color:#2b2140;text-shadow:0 2px 0 #fff}
+.by{font-size:13px;opacity:.8;margin-bottom:8px}
+.card{background:rgba(24,31,26,.94);border:1px solid #586252;border-radius:16px;padding:16px;width:min(360px,100%);display:flex;flex-direction:column;gap:10px;box-shadow:0 14px 35px #0009}
+input{font:inherit;font-size:17px;padding:11px 12px;border:1px solid #66705f;border-radius:10px;width:100%;text-align:center;outline:none;background:#111813;color:#eee}
+#code{text-transform:uppercase;letter-spacing:6px;font-weight:700}
+button{font:inherit;font-weight:700;font-size:17px;padding:12px;border:1px solid #69745f;border-radius:10px;background:#59654d;color:#fff;box-shadow:0 3px 0 #080b09;cursor:pointer}
+button:active{transform:translateY(3px);box-shadow:0 1px 0 #2b2140}
+button.pink{background:#765047;color:#fff}button.blue{background:#526c70;color:#fff}button.gray{background:#343d35;color:#eee}
+button:disabled{opacity:.5}
+.row{display:flex;gap:8px}.row>*{flex:1}
+#msg,#msgL{min-height:18px;font-size:14px;text-align:center;color:#c0143c;font-weight:700}
+.big{font-size:44px;letter-spacing:8px;text-align:center;font-weight:800;color:#ff5d8f}
+.pl{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:12px;background:#303a30;color:#eee;font-weight:700}
+.dot{width:20px;height:20px;border-radius:50%;border:3px solid #2b2140}
+canvas{position:fixed;inset:0;display:block}
+#hud{position:fixed;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:flex-start;padding:8px;pointer-events:none;gap:6px}
+.pill{background:rgba(12,17,14,.88);border:1px solid #69745f;color:#f2f0e7;border-radius:10px;padding:5px 10px;font-weight:800;font-size:15px}
+#stamW{width:110px;height:12px;border:3px solid #2b2140;border-radius:8px;background:#fff;margin-top:6px;overflow:hidden}
+#stam{height:100%;width:100%;background:#4cd964}
+#banner{position:fixed;top:56px;left:0;right:0;text-align:center;font-weight:800;font-size:18px;pointer-events:none}
+#banner span{background:rgba(12,17,14,.9);border:1px solid #69745f;color:#eee;border-radius:10px;padding:6px 14px;display:inline-block}
+#blind{position:fixed;inset:0;background:#2b2140;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:800;font-size:22px;text-align:center}
+#blind b{font-size:96px;color:#ffd23f}
+#joy{position:fixed;left:18px;bottom:22px;width:128px;height:128px;border-radius:50%;background:rgba(255,255,255,.45);border:4px solid #2b2140;touch-action:none}
+#knob{position:absolute;left:36px;top:36px;width:48px;height:48px;border-radius:50%;background:#ff5d8f;border:4px solid #2b2140}
+#btns{position:fixed;right:14px;bottom:22px;display:flex;flex-direction:column;gap:10px;align-items:flex-end}
+#btns button{width:104px;padding:10px 6px;touch-action:none;font-size:14px}#skillInfo{position:fixed;right:12px;top:55px;color:#e8e5d9;background:#111a14dd;border:1px solid #65705d;border-radius:9px;padding:6px 9px;font-size:12px;pointer-events:none}#toolBtn{background:#4d6250}#ability{background:#79564a}
+#emo{display:flex;gap:6px;background:#fff;border:3px solid #2b2140;border-radius:16px;padding:6px}
+#emo button{width:46px!important;font-size:24px;padding:4px;box-shadow:none}
+#exit{position:fixed;top:8px;left:50%;transform:translateX(-50%);padding:5px 10px;font-size:14px;z-index:5}
+#result{position:fixed;inset:0;background:rgba(43,33,64,.78);display:flex;align-items:center;justify-content:center;padding:16px}
+#result h2{margin:0;text-align:center;font-size:30px;color:#ff5d8f}
+</style></head><body>
+
+<div id="menu" class="scr">
+  <h1>HIDE AND SEEK<small>HAUNTED FOREST</small></h1>
+  <div class="by">HAUNTED FOREST · by ZEYY</div>
+  <div class="card">
+    <input id="name" maxlength="10" placeholder="Nama pemain">
+    <button class="pink" id="bPlay">▶ PLAY</button>
+    <input id="code" maxlength="4" placeholder="KODE ROOM">
+    <div class="row"><button class="blue" id="bCreate">CREATE ROOM</button><button id="bJoin">JOIN ROOM</button></div>
+    <div id="msg"></div>
+  </div>
+</div>
+
+<div id="lobby" class="scr hide">
+  <h1 style="font-size:36px">HIDE AND SEEK<small>HAUNTED FOREST</small></h1>
+  <div class="card">
+    <div style="text-align:center;font-size:13px">Kode room · 2–5 pemain</div>
+    <div class="big" id="rcode">----</div>
+    <button class="gray" id="bCopy">📋 Salin link undangan</button>
+    <div id="plist" style="display:flex;flex-direction:column;gap:6px"></div>
+    <button class="pink" id="bStart">MULAI GAME</button>
+    <button class="gray" id="bLeaveL">Keluar room</button>
+    <div id="msgL"></div>
+  </div>
+</div>
+
+<div id="game" class="hide">
+  <canvas id="cv"></canvas>
+  <div id="hud"><div><div class="pill" id="role">-</div><div id="stamW"><div id="stam"></div></div></div><div class="pill" id="timer">0</div></div>
+  <button id="exit" class="gray">Keluar</button>
+  <div id="banner"></div><div id="skillInfo">Kabut tebal membatasi pandangan</div>
+  <div id="joy"><div id="knob"></div></div>
+  <div id="btns">
+    <div id="emo" class="hide"><button>😂</button><button>👋</button><button>😜</button><button>🙈</button></div>
+    <button class="blue" id="bEmote">😀 Emote</button>
+    <button id="bCrouch">🙈 Jongkok</button>
+    <button class="pink" id="bRun">💨 Lari</button>
+    <button id="toolBtn" class="hide">🔦 Senter</button><button id="ability" class="hide">👁 Skill</button>
+  </div>
+  <div id="blind" class="hide"></div>
+  <div id="result" class="hide"><div class="card"><h2 id="rt"></h2><div id="rs" style="display:flex;flex-direction:column;gap:6px"></div><button class="pink" id="bAgain">MAIN LAGI</button><button class="gray" id="bLeaveR">Keluar room</button></div></div>
+</div>
+
+<script>
+// ====== ISI KONFIGURASI FIREBASE KAMU DI SINI ======
+const FIREBASE_CONFIG={
+  apiKey:"AIzaSyA3cQbBTWdLr2I46AOhWfdxo5S_El_Xbck",
+  authDomain:"hide-and-seek-zey.firebaseapp.com",
+  databaseURL:"https://hide-and-seek-zey-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId:"hide-and-seek-zey",
+  appId:"1:184114231496:web:d1620476270b90a443cdfd"
+};
+// ===================================================
+const $=s=>document.querySelector(s),W=900,H=600,COLORS=["#c17b65","#7297a0","#c2ad68","#8c9c78","#a58bb0"],VIS=210;
+let db=null,offset=0;
+try{if(FIREBASE_CONFIG.apiKey.startsWith("ISI"))throw 0;firebase.initializeApp(FIREBASE_CONFIG);db=firebase.database();db.ref(".info/serverTimeOffset").on("value",s=>offset=s.val()||0)}catch(e){}
+const now=()=>Date.now()+offset;
+
+// ---------- MAP ----------
+const walls=[[620,40,240,8],[620,40,8,200],[852,40,8,200],[620,232,90,8],[770,232,90,8],
+ [300,380,100,8],[460,380,140,8],[300,380,8,200],[592,380,8,200],[300,572,300,8]];
+const spots=[[80,100,"🌿"],[220,160,"🌿"],[60,300,"🌿"],[150,60,"🌳"],[250,290,"🌳"],[120,225,"🌳"],
+ [450,190,"🌳"],[500,320,"🌿"],[700,420,"🌿"],[780,520,"🌿"],[720,330,"📦"],[830,400,"🌳"],
+ [700,110,"🪑"],[838,84,"🚪"],[655,90,"🚪"],[770,200,"🪑"],
+ [345,450,"🪑"],[545,450,"🪑"],[345,535,"🪑"],[545,535,"🪑"],[450,530,"📚"]];
+const spawns=[[130,140],[740,330],[200,330],[470,120],[820,500]];
+const fireflies=Array.from({length:18},(_,i)=>({x:(i*173+61)%W,y:(i*97+43)%H,p:i*.8}));
+
+// ---------- STATE ----------
+let me={id:Math.random().toString(36).slice(2,9),name:"",x:450,y:300,e:"",et:0},code=null,room=null,pos={},round=null,isSeeker=false,joined=false;
+let crouch=false,stam=100,tired=false,runBtn=false,keys={},jv={x:0,y:0},lastSend=0,lastSig="",lastCaught=0,tick=null,listeners=[],flashOn=false,flashBattery=100,skillReady=0,skillUntil=0,skillDir=null,decoyReady=0;
+const show=id=>["menu","lobby","game"].forEach(k=>$("#"+k).classList.toggle("hide",k!==id));
+const say=t=>{$("#msg").textContent=t;$("#msgL").textContent=t};
+try{$("#name").value=localStorage.zeyyName||""}catch(e){}
+const qr=new URLSearchParams(location.search).get("room");if(qr)$("#code").value=qr.toUpperCase().slice(0,4);
+
+// ---------- SOUND ----------
+let ac;function beep(f=440,d=.12,t="square",v=.06,at=0){try{ac=ac||new(window.AudioContext||window.webkitAudioContext)();const o=ac.createOscillator(),g=ac.createGain();o.type=t;o.frequency.value=f;g.gain.value=v;o.connect(g);g.connect(ac.destination);const s=ac.currentTime+at;o.start(s);g.gain.exponentialRampToValueAtTime(.001,s+d);o.stop(s+d)}catch(e){}}
+const jingle=a=>a.forEach((f,i)=>beep(f,.15,"triangle",.08,i*.13));
+
+// ---------- ROOM ----------
+function getName(){const n=$("#name").value.trim();if(!n){say("Isi nama pemain dulu ya");return null}try{localStorage.zeyyName=n}catch(e){}me.name=n;return n}
+function ready(){if(!db){say("Firebase belum diatur. Isi FIREBASE_CONFIG di index.html");return false}return true}
+const rand=()=>{let s="",c="ABCDEFGHJKMNPQRSTUVWXYZ";for(let i=0;i<4;i++)s+=c[Math.floor(Math.random()*c.length)];return s};
+async function createRoom(pub){if(!getName()||!ready())return;
+  for(let i=0;i<5;i++){const c=rand();
+    const r=await db.ref("rooms/"+c).transaction(cur=>cur?undefined:{host:me.id,state:"lobby",pub:pub?1:0,players:{[me.id]:{name:me.name,ci:0,score:0}}});
+    if(r.committed){enter(c);return}}
+  say("Gagal membuat room, coba lagi")}
+async function joinRoom(c){if(!getName()||!ready())return;c=(c||"").toUpperCase().trim();if(c.length!==4)return say("Kode room harus 4 huruf");
+  let reason="";const r=await db.ref("rooms/"+c).transaction(cur=>{if(!cur||!cur.players){reason="Room tidak ditemukan";return}
+    if(cur.state!=="lobby"){reason="Game sedang berjalan, tunggu ronde selesai";return}
+    const ids=Object.keys(cur.players);if(ids.includes(me.id))return cur;if(ids.length>=5){reason="Room penuh (maksimal 5 pemain)";return}
+    const used=ids.map(i=>cur.players[i].ci),ci=[0,1,2,3,4].find(n=>!used.includes(n));if(ci===undefined){reason="Room penuh";return}
+    cur.players[me.id]={name:me.name,ci,score:0};return cur;
+  });
+  if(!r.committed){say(reason||"Tidak bisa bergabung ke room");return}enter(c)}
+async function quickPlay(){if(!getName()||!ready())return;
+  const s=await db.ref("rooms").orderByChild("pub").equalTo(1).limitToFirst(10).once("value");let found=null;
+  s.forEach(x=>{const r=x.val();if(!found&&r.state==="lobby"&&r.players&&Object.keys(r.players).length<5)found=x.key});
+  if(found)joinRoom(found);else createRoom(true)}
+function enter(c){code=c;joined=true;pos={};round=null;lastCaught=0;
+  db.ref("rooms/"+c+"/players/"+me.id).onDisconnect().remove();db.ref("pos/"+c+"/"+me.id).onDisconnect().remove();
+  const rr=db.ref("rooms/"+c),pr=db.ref("pos/"+c),f=s=>{const v=s.val();if(!v)return;const o=pos[s.key]||(pos[s.key]={dx:v.x,dy:v.y});Object.assign(o,v)};
+  rr.on("value",onRoom);pr.on("child_added",f);pr.on("child_changed",f);pr.on("child_removed",s=>delete pos[s.key]);
+  listeners=[()=>rr.off(),()=>pr.off()];
+  tick=setInterval(hostTick,200);$("#rcode").textContent=c;say("")}
+function leave(m){if(!code)return;const c=code,wasJoined=joined;code=null;joined=false;clearInterval(tick);listeners.forEach(f=>f());
+  if(wasJoined&&room&&room.players){const ids=Object.keys(room.players);
+    if(ids.length<=1&&room.players[me.id]){db.ref("rooms/"+c).remove();db.ref("pos/"+c).remove()}
+    else{db.ref("rooms/"+c+"/players/"+me.id).remove();db.ref("pos/"+c+"/"+me.id).remove()}}
+  room=null;pos={};crouch=false;$("#result").classList.add("hide");show("menu");say(m||"")}
+function onRoom(s){const r=s.val();if(!code)return;
+  if(!r||!r.players||!r.players[me.id]){leave(r?"Kamu keluar dari room":"Room ditutup");return}
+  const prev=room&&room.state;room=r;const ids=Object.keys(r.players).sort();
+  if(!r.players[r.host]&&ids[0]===me.id)db.ref("rooms/"+code+"/host").set(me.id);
+  if(r.state==="lobby"){show("lobby");$("#plist").innerHTML=ids.map(i=>{const p=r.players[i];return`<div class="pl"><span class="dot" style="background:${COLORS[p.ci]}"></span>${esc(p.name)}${i===r.host?" 👑":""}${i===me.id?" (kamu)":""}<span style="margin-left:auto">⭐${p.score||0}</span></div>`}).join("");
+    const h=r.host===me.id;$("#bStart").disabled=!h||ids.length<2;$("#bStart").textContent=h?(ids.length<2?"Menunggu pemain (min 2)":"MULAI GAME"):"Menunggu host mulai…"}
+  else{if(r.round!==round){round=r.round;initRound()}show("game");
+    if(r.state==="over")showResult();else $("#result").classList.add("hide");
+    if(prev&&prev!==r.state&&r.state==="seeking")jingle([523,659,784]);
+    const n=Object.keys(r.caught||{}).length;if(n>lastCaught)beep(150,.35,"sawtooth",.1);lastCaught=n}}
+const esc=t=>String(t).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+function startGame(){const r=room;if(!r||r.host!==me.id)return;const ids=Object.keys(r.players);if(ids.length<2)return say("Minimal 2 pemain");if(ids.length>5)return say("Maksimal 5 pemain");
+  const t=now();db.ref("rooms/"+code).update({state:"hiding",seeker:ids[Math.floor(Math.random()*ids.length)],round:t,hideEnd:t+10000,seekEnd:t+100000,caught:null,winner:null})}
+function hostTick(){const r=room;if(!r||r.host!==me.id||(r.state!=="hiding"&&r.state!=="seeking"))return;
+  const ids=Object.keys(r.players),t=now(),ref=db.ref("rooms/"+code);
+  if(ids.length<2)return ref.update({state:"lobby"});
+  if(!r.players[r.seeker])return finish("hiders",{},r.caught||{});
+  if(r.state==="hiding"){if(t>=r.hideEnd)ref.update({state:"seeking"});return}
+  const sp=pos[r.seeker],cg=Object.assign({},r.caught||{}),up={};let add=0;
+  if(sp)ids.forEach(id=>{if(id===r.seeker||cg[id])return;const p=pos[id];if(p&&Math.hypot(p.x-sp.x,p.y-sp.y)<30){cg[id]=true;up["caught/"+id]=true;add++}});
+  if(add)up["players/"+r.seeker+"/score"]=(r.players[r.seeker].score||0)+add;
+  const hiders=ids.filter(i=>i!==r.seeker);
+  if(hiders.every(i=>cg[i]))return finish("seeker",up,cg);
+  if(t>=r.seekEnd)return finish("hiders",up,cg);
+  if(add)ref.update(up)}
+function finish(w,up,cg){const r=room;up.state="over";up.winner=w;
+  if(w==="seeker")up["players/"+r.seeker+"/score"]=(up["players/"+r.seeker+"/score"]??(r.players[r.seeker]?.score||0))+2;
+  else Object.keys(r.players).forEach(i=>{if(i!==r.seeker&&!cg[i])up["players/"+i+"/score"]=(r.players[i].score||0)+2});
+  db.ref("rooms/"+code).update(up)}
+function showResult(){const r=room,sn=r.players[r.seeker]?.name||"?";
+  $("#rt").innerHTML=r.winner==="seeker"?`🔍 SEEKER MENANG!<br><small>${esc(sn)} menangkap semua hider</small>`:`🌿 HIDER MENANG!<br><small>${esc(sn)} gagal menangkap semua</small>`;
+  $("#rs").innerHTML=Object.keys(r.players).map(i=>({i,p:r.players[i]})).sort((a,b)=>(b.p.score||0)-(a.p.score||0)).map(({i,p})=>`<div class="pl"><span class="dot" style="background:${COLORS[p.ci]}"></span>${esc(p.name)} ${i===r.seeker?"🔍":(r.caught&&r.caught[i]?"😵":"🌿")}<span style="margin-left:auto">⭐${p.score||0}</span></div>`).join("");
+  const h=r.host===me.id;$("#bAgain").disabled=!h;$("#bAgain").textContent=h?"MAIN LAGI":"Menunggu host…";
+  if($("#result").classList.contains("hide")){$("#result").classList.remove("hide");jingle(r.winner==="seeker"===isSeeker?[523,659,784,1046]:[392,330,262])}}
+
+// ---------- GAME ----------
+function initRound(){isSeeker=room.seeker===me.id;crouch=false;stam=100;tired=false;flashOn=false;flashBattery=100;skillReady=0;skillUntil=0;skillDir=null;decoyReady=0;
+  const ci=room.players[me.id].ci,sp=isSeeker?[450,300]:spawns[ci];me.x=sp[0];me.y=sp[1];me.e="";sendPos(true);
+  Object.values(pos).forEach(o=>{o.dx=o.x;o.dy=o.y});
+  $("#role").textContent=isSeeker?"🔍 SEEKER":"🌿 HIDER";$("#result").classList.add("hide")}
+function sendPos(force){if(!code)return;const hid=isHidden(),sig=[Math.round(me.x),Math.round(me.y),crouch,hid,me.et,flashOn].join(),t=performance.now();
+  if(!force&&sig===lastSig&&t-lastSend<1500)return;if(!force&&t-lastSend<90)return;lastSend=t;lastSig=sig;
+  db.ref("pos/"+code+"/"+me.id).set({x:Math.round(me.x),y:Math.round(me.y),c:crouch?1:0,h:hid?1:0,e:me.e,et:me.et,fl:flashOn?1:0})}
+const isHidden=()=>!isSeeker&&crouch&&spots.some(s=>Math.hypot(s[0]-me.x,s[1]-me.y)<30);
+const hit=(x,y)=>x<12||y<12||x>W-12||y>H-12||walls.some(([a,b,c,d])=>x>a-10&&x<a+c+10&&y>b-10&&y<b+d+10);
+function update(dt){const r=room;if(!r||r.state==="lobby"||r.state==="over")return;
+  const caught=r.caught&&r.caught[me.id],can=!caught&&(r.state==="seeking"||(r.state==="hiding"&&!isSeeker));
+  let ax=(keys.arrowright||keys.d?1:0)-(keys.arrowleft||keys.a?1:0),ay=(keys.arrowdown||keys.s?1:0)-(keys.arrowup||keys.w?1:0);
+  if(jv.x||jv.y){ax=jv.x;ay=jv.y}const m=Math.hypot(ax,ay);if(m>1){ax/=m;ay/=m}
+  const moving=can&&m>.15,run=(runBtn||keys.shift)&&moving&&!tired&&!crouch;
+  if(run){stam-=35*dt;if(stam<=0){stam=0;tired=true}}else{stam=Math.min(100,stam+(moving?12:22)*dt);if(tired&&stam>25)tired=false}
+  if(moving){const sp=(isSeeker?145:140)*(crouch?.45:1)*(run?1.65:1)*dt;let nx=me.x+ax*sp;if(!hit(nx,me.y))me.x=nx;let ny=me.y+ay*sp;if(!hit(me.x,ny))me.y=ny}
+  if(flashOn){flashBattery=Math.max(0,flashBattery-7*dt);if(flashBattery<=0)flashOn=false}else if(!isSeeker)flashBattery=Math.min(100,flashBattery+2.5*dt);
+  $("#stam").style.width=stam+"%";$("#stam").style.background=tired?"#ff5d5d":"#4cd964";
+  Object.entries(pos).forEach(([id,o])=>{if(Math.hypot(o.x-o.dx,o.y-o.dy)>120){o.dx=o.x;o.dy=o.y}else{const k=Math.min(1,dt*12);o.dx+=(o.x-o.dx)*k;o.dy+=(o.y-o.dy)*k}});
+  sendPos();
+  // HUD
+  const t=now(),b=$("#banner"),bl=$("#blind");
+  const tool=$("#toolBtn"),ability=$("#ability");if(isSeeker){tool.classList.add("hide");ability.classList.remove("hide");ability.textContent=t<skillReady?`👁 ${Math.ceil((skillReady-t)/1000)}s`:"👁 Insting";$("#skillInfo").textContent="Insting: deteksi arah, bukan lokasi"}else{tool.classList.remove("hide");ability.classList.remove("hide");tool.textContent=`🔦 Senter ${Math.round(flashBattery)}%`;ability.textContent=t<decoyReady?`🪨 ${Math.ceil((decoyReady-t)/1000)}s`:"🪨 Batu umpan";$("#skillInfo").textContent="Senter membantu melihat, cahayanya terlihat hantu"}
+  if(r.state==="hiding"){const n=Math.max(0,Math.ceil((r.hideEnd-t)/1000));$("#timer").textContent="⏱ "+n;
+    if(isSeeker){bl.classList.remove("hide");bl.innerHTML=`🙈 Tutup mata…<b>${n}</b>Hider sedang bersembunyi`;b.innerHTML=""}
+    else{bl.classList.add("hide");b.innerHTML=`<span>🌿 Sembunyi! ${n} detik</span>`}}
+  else{bl.classList.add("hide");const n=Math.max(0,Math.ceil((r.seekEnd-t)/1000));$("#timer").textContent="⏱ "+n;
+    b.innerHTML=caught?"<span>😵 Kamu tertangkap! Tonton temanmu</span>":(t-r.hideEnd<2500?`<span>${isSeeker?"🔍 Cari mereka!":"🏃 Seeker datang!"}</span>`:(isHidden()?"<span>🫥 Kamu bersembunyi</span>":""))}}
+const cv=$("#cv"),ctx=cv.getContext("2d");
+function rr(x,y,w,h,r,f,s){ctx.beginPath();ctx.roundRect?ctx.roundRect(x,y,w,h,r):ctx.rect(x,y,w,h);if(f){ctx.fillStyle=f;ctx.fill()}if(s){ctx.strokeStyle=s;ctx.lineWidth=3;ctx.stroke()}}
+function person(x,y,col,cr,al,name,tag,e){ctx.globalAlpha=al;ctx.fillStyle="rgba(0,0,0,.2)";ctx.beginPath();ctx.ellipse(x,y+12,12,5,0,0,7);ctx.fill();
+  const o=cr?5:0;rr(x-9,y-5+o,18,cr?11:17,6,col,"#2b2140");ctx.fillStyle="#ffd9b0";ctx.beginPath();ctx.arc(x,y-11+o,9,0,7);ctx.fill();ctx.stroke();
+  ctx.fillStyle=col;ctx.beginPath();ctx.arc(x,y-13+o,9,Math.PI,0);ctx.fill();ctx.stroke();
+  ctx.fillStyle="#2b2140";ctx.fillRect(x-4,y-10+o,2.5,3);ctx.fillRect(x+2,y-10+o,2.5,3);
+  ctx.font="bold 11px sans-serif";ctx.textAlign="center";ctx.lineWidth=3;ctx.strokeStyle="#fff";ctx.strokeText(tag+name,x,y-30+o);ctx.fillStyle="#2b2140";ctx.fillText(tag+name,x,y-30+o);
+  if(e&&now()-e.t<2500){ctx.font="26px serif";ctx.fillText(e.e,x,y-46+o)}ctx.globalAlpha=1}
+function draw(){const w=cv.width,h=cv.height;ctx.setTransform(1,0,0,1,0,0);ctx.fillStyle="#090f0c";ctx.fillRect(0,0,w,h);
+  const z=Math.min(1.4,Math.max(w/W,h/H,.7)),vw=w/z,vh=h/z,cx=vw<W?Math.max(vw/2,Math.min(W-vw/2,me.x)):W/2,cy=vh<H?Math.max(vh/2,Math.min(H-vh/2,me.y)):H/2;
+  ctx.setTransform(z,0,0,z,-(cx-vw/2)*z,-(cy-vh/2)*z);
+  ctx.fillStyle="#202a20";ctx.fillRect(0,0,W,H);
+  ctx.fillStyle="#34382d";ctx.fillRect(0,340,300,24);ctx.fillRect(280,340,24,60);ctx.fillRect(300,300,320,24);ctx.fillRect(610,230,24,90);ctx.fillRect(640,300,260,24);
+  rr(20,30,260,300,24,"#20251d");ctx.fillStyle="#67563b";ctx.fillRect(100,255,70,45);ctx.fillStyle="#343b30";ctx.fillRect(40,200,8,50);ctx.fillRect(100,200,8,50);ctx.fillRect(38,196,72,8);
+  ctx.fillStyle="#393a30";ctx.fillRect(620,40,240,200);ctx.fillStyle="#282e28";ctx.fillRect(300,380,300,200);
+  ctx.fillStyle="#171c17";ctx.fillRect(420,386,120,10);ctx.fillStyle="#343c31";ctx.fillRect(425,388,110,6);
+  walls.forEach(([a,b,c,d],i)=>{ctx.fillStyle=i<5?"#554333":"#3b493d";ctx.fillRect(a,b,c,d);ctx.strokeStyle="#171c17";ctx.lineWidth=2;ctx.strokeRect(a,b,c,d)});
+  ctx.font="bold 14px sans-serif";ctx.textAlign="center";ctx.fillStyle="#b5b19e";ctx.fillText("AREA HUTAN",150,50);ctx.fillText("RUMAH TUA",740,30);ctx.fillText("GUDANG",450,598);ctx.font="12px sans-serif";ctx.fillText("pasir",135,290);
+  const list=[],cg=(room&&room.caught)||{};
+  const meCaught=cg[me.id];
+  list.push({y:me.y,f:()=>person(me.x,me.y,COLORS[room.players[me.id].ci],crouch,isHidden()?.45:meCaught?.5:1,me.name,isSeeker?"🔍 ":"",{e:me.e,t:me.et})});
+  Object.entries(pos).forEach(([id,o])=>{if(id===me.id||!room.players[id])return;const d=Math.hypot(o.dx-me.x,o.dy-me.y),c=cg[id];
+    const range=isSeeker?270:(flashOn?220:125);if(!c&&(d>range||(o.h&&d>42)))return;list.push({y:o.dy,f:()=>person(o.dx,o.dy,COLORS[room.players[id].ci],o.c,c?.5:1,room.players[id].name,(c?"😵 ":id===room.seeker?"🔍 ":""),{e:o.e,t:o.et})})});
+  list.sort((a,b)=>a.y-b.y).forEach(i=>i.f());
+  spots.forEach((s,i)=>{const [x,y,type]=s;ctx.save();if(type==="🌳"){ctx.fillStyle="#211f18";ctx.fillRect(x-3,y-2,6,22);ctx.fillStyle="#26372a";ctx.beginPath();ctx.arc(x,y-8,17,0,7);ctx.fill();ctx.fillStyle="#304333";ctx.beginPath();ctx.arc(x-8,y-15,10,0,7);ctx.arc(x+9,y-14,11,0,7);ctx.fill()}else{ctx.fillStyle="#26372a";ctx.beginPath();ctx.ellipse(x,y,19,10,0,0,7);ctx.fill();ctx.fillStyle="#354735";ctx.beginPath();ctx.arc(x-7,y-3,7,0,7);ctx.arc(x+5,y-5,8,0,7);ctx.fill()}ctx.restore()});
+  if(isSeeker&&room.noise&&now()-room.noise.at<2200){const n=room.noise;ctx.save();ctx.strokeStyle="rgba(205,175,115,.8)";ctx.lineWidth=3;ctx.beginPath();ctx.arc(n.x,n.y,18+((now()-n.at)/2200)*26,0,Math.PI*2);ctx.stroke();ctx.fillStyle="rgba(205,175,115,.7)";ctx.font="18px sans-serif";ctx.textAlign="center";ctx.fillText("♪",n.x,n.y-22);ctx.restore()}
+  // Small fireflies, deliberately dim
+  fireflies.forEach(f=>{const pulse=.25+.25*Math.sin(now()/700+f.p);ctx.fillStyle=`rgba(196,190,112,${pulse})`;ctx.beginPath();ctx.arc(f.x,f.y,1.5,0,7);ctx.fill()});
+  // Local visibility mask: no heavy blur/filter, just a cheap radial fog vignette
+  ctx.save();ctx.setTransform(z,0,0,z,-(cx-vw/2)*z,-(cy-vh/2)*z);ctx.globalCompositeOperation="source-over";ctx.fillStyle="rgba(4,8,6,.88)";ctx.fillRect(0,0,W,H);ctx.globalCompositeOperation="destination-out";const radius=isSeeker?285:(flashOn?230:135);const g=ctx.createRadialGradient(me.x,me.y,Math.max(24,radius*.22),me.x,me.y,radius);g.addColorStop(0,"rgba(0,0,0,1)");g.addColorStop(.72,"rgba(0,0,0,.78)");g.addColorStop(1,"rgba(0,0,0,0)");ctx.fillStyle=g;ctx.beginPath();ctx.arc(me.x,me.y,radius,0,Math.PI*2);ctx.fill();ctx.globalCompositeOperation="source-over";
+  if(!isSeeker&&flashOn){const fg=ctx.createRadialGradient(me.x,me.y,10,me.x,me.y,220);fg.addColorStop(0,"rgba(0,0,0,.20)");fg.addColorStop(1,"rgba(0,0,0,0)");ctx.fillStyle=fg;ctx.beginPath();ctx.arc(me.x,me.y,220,0,7);ctx.fill()}
+  ctx.restore();
+  if(isSeeker&&skillUntil>now()&&skillDir){ctx.save();ctx.translate(me.x,me.y);ctx.rotate(skillDir);ctx.strokeStyle="rgba(190,95,75,.8)";ctx.lineWidth=3;ctx.setLineDash([5,8]);ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(130,0);ctx.stroke();ctx.restore()}
+}
+let lt=performance.now();
+function loop(t){const dt=Math.min(.05,(t-lt)/1000);lt=t;if(code&&room&&room.state!=="lobby"&&room.players&&room.players[me.id]){try{update(dt);draw()}catch(e){}}requestAnimationFrame(loop)}
+function rs(){cv.width=innerWidth;cv.height=innerHeight}addEventListener("resize",rs);rs();requestAnimationFrame(loop);
+
+// ---------- INPUT ----------
+const kk=e=>e.key.length>1?e.key.toLowerCase():e.key.toLowerCase();
+addEventListener("keydown",e=>{if(e.target.tagName==="INPUT")return;keys[kk(e)]=true;if(kk(e)==="c")toggleCrouch();if("1234".includes(e.key)&&e.key)emote(+e.key-1)});
+addEventListener("keyup",e=>keys[kk(e)]=false);
+const jb=$("#joy"),jk=$("#knob");let jp=null;
+function jm(e){const r=jb.getBoundingClientRect(),R=r.width/2;let dx=e.clientX-(r.left+R),dy=e.clientY-(r.top+R);const m=Math.hypot(dx,dy);if(m>R){dx*=R/m;dy*=R/m}jv.x=dx/R;jv.y=dy/R;jk.style.transform=`translate(${dx}px,${dy}px)`}
+jb.addEventListener("pointerdown",e=>{jp=e.pointerId;jb.setPointerCapture(jp);jm(e)});
+jb.addEventListener("pointermove",e=>{if(e.pointerId===jp)jm(e)});
+["pointerup","pointercancel"].forEach(n=>jb.addEventListener(n,()=>{jp=null;jv.x=jv.y=0;jk.style.transform=""}));
+const rb=$("#bRun");rb.addEventListener("pointerdown",()=>runBtn=true);["pointerup","pointercancel","pointerleave"].forEach(n=>rb.addEventListener(n,()=>runBtn=false));
+function toggleCrouch(){if(!room||isSeeker||(room.caught&&room.caught[me.id]))return;crouch=!crouch;beep(crouch?300:420,.08);$("#bCrouch").textContent=crouch?"🧍 Berdiri":"🙈 Jongkok";sendPos(true)}
+const EM=["😂","👋","😜","🙈"];
+function emote(i){me.e=EM[i];me.et=now();beep(600+i*120,.1,"triangle");$("#emo").classList.add("hide");sendPos(true)}
+$("#toolBtn").onclick=()=>{if(isSeeker||flashBattery<=0)return;flashOn=!flashOn;sendPos(true);beep(flashOn?620:360,.08,"sine",.04)};
+$("#ability").onclick=()=>{if(!room||room.state!=="seeking")return;const t=now();if(isSeeker){if(t<skillReady)return;let best=null,bd=1e9;Object.entries(pos).forEach(([id,o])=>{if(id===me.id||(room.caught&&room.caught[id]))return;const d=Math.hypot(o.x-me.x,o.y-me.y);if(d<bd){bd=d;best=o}});if(best&&bd<420){skillDir=Math.atan2(best.y-me.y,best.x-me.x);skillUntil=t+2200}else{skillDir=null;skillUntil=t+500}skillReady=t+30000;beep(240,.25,"sawtooth",.06)}else{if(t<decoyReady)return;decoyReady=t+35000;db.ref("rooms/"+code+"/noise").set({x:Math.round(me.x),y:Math.round(me.y),at:t,by:me.id});beep(180,.18,"triangle",.07)}};
+$("#bCrouch").onclick=toggleCrouch;$("#bEmote").onclick=()=>$("#emo").classList.toggle("hide");
+document.querySelectorAll("#emo button").forEach((b,i)=>b.onclick=()=>emote(i));
+
+// ---------- BUTTONS ----------
+$("#bPlay").onclick=()=>{beep(500,.08);quickPlay()};$("#bCreate").onclick=()=>{beep(500,.08);createRoom(false)};$("#bJoin").onclick=()=>{beep(500,.08);joinRoom($("#code").value)};
+$("#bStart").onclick=startGame;$("#bAgain").onclick=startGame;
+["#bLeaveL","#bLeaveR","#exit"].forEach(s=>$(s).onclick=()=>leave());
+$("#bCopy").onclick=()=>{const l=location.href.split("?")[0]+"?room="+code;(navigator.clipboard?navigator.clipboard.writeText(l):Promise.reject()).then(()=>say("Link disalin!"),()=>prompt("Salin link ini:",l))};
+addEventListener("beforeunload",()=>{if(code&&joined&&room&&room.players&&Object.keys(room.players).length<=1){db.ref("rooms/"+code).remove()}});
+</script></body></html>
